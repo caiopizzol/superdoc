@@ -128,6 +128,35 @@ After a fresh clone, run `pnpm run generate:all` before working on SDK, CLI, or 
 
 Note: `packages/sdk/tools/__init__.py` is a manual file (Python package marker) and stays committed.
 
+## Testing
+
+Three types of tests, each with a different purpose:
+
+### Unit Tests (Vitest)
+
+Co-located with source code as `feature.test.ts` next to `feature.ts`. Run with `pnpm test` from a package directory. Test pure logic, data transformations, and utilities in isolation.
+
+- Framework: **Vitest** (config at `vitest.config.mjs`)
+- Most coverage in `packages/super-editor/` (526 files) and `packages/layout-engine/` (150 files)
+- Run a single package: `pnpm --filter <package> test`
+
+### Behavior Tests (Playwright)
+
+End-to-end tests that exercise features through the browser. Located in `e2e-tests/` and `tests/behavior/`.
+
+- Framework: **Playwright**
+- Test editing commands, collaboration, import/export through a running SuperDoc instance
+
+### Visual Regression Tests (Playwright + R2)
+
+Screenshot-based tests that catch rendering changes. Located in `tests/visual/`. See `tests/visual/CLAUDE.md` for full details.
+
+- Framework: **Playwright** with pixel-diff comparison
+- Test documents auto-discovered from `test-data/rendering/*.docx`
+- Baselines stored in **Cloudflare R2** (not git), generated from `stable` branch in CI
+- CI runs as a **soft gate** — pixel diffs post a PR comment but don't block merge
+- **Community PRs cannot upload to R2** (requires Cloudflare credentials). A team member must generate baselines after merge.
+
 ## Brand & Design System
 
 Brand guidelines, voice, and design tokens live in `brand/`. Token values are defined in `packages/superdoc/src/assets/styles/tokens.css`.
