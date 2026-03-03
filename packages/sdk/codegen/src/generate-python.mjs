@@ -179,13 +179,23 @@ function classNameFor(pathParts, asyncMode) {
   return `${prefix}${pathParts.map((p) => pascalCase(p)).join('')}Api`;
 }
 
+function snakeCase(value) {
+  return value
+    .replace(/([A-Z]+)([A-Z][a-z])/g, '$1_$2')
+    .replace(/([a-z0-9])([A-Z])/g, '$1_$2')
+    .replace(/[^a-zA-Z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '')
+    .toLowerCase();
+}
+
 function renderClass(treeNode, pathParts, asyncMode, resultTypeMap, paramTypeMap) {
   const className = classNameFor(pathParts, asyncMode);
   const lines = [`class ${className}:`, '    def __init__(self, runtime):', '        self._runtime = runtime', ''];
 
   for (const [key, value] of Object.entries(treeNode)) {
     if (value.__operation) {
-      const methodName = camelCase(key);
+      const methodName = snakeCase(key);
+      const camelAlias = camelCase(key);
       const operationId = value.__operation.id;
       const resultType = resultTypeMap.get(operationId) ?? 'dict[str, Any]';
       const paramsType = paramTypeMap.get(operationId) ?? 'dict[str, Any]';
@@ -206,15 +216,38 @@ function renderClass(treeNode, pathParts, asyncMode, resultTypeMap, paramTypeMap
         );
       }
       lines.push('');
+
+      if (camelAlias !== methodName) {
+        if (asyncMode) {
+          lines.push(
+            `    async def ${camelAlias}(self, params: ${paramsType} | None = None, *, timeout_ms=None, stdin_bytes=None) -> ${resultType}:`,
+          );
+          lines.push(`        return await self.${methodName}(params, timeout_ms=timeout_ms, stdin_bytes=stdin_bytes)`);
+        } else {
+          lines.push(
+            `    def ${camelAlias}(self, params: ${paramsType} | None = None, *, timeout_ms=None, stdin_bytes=None) -> ${resultType}:`,
+          );
+          lines.push(`        return self.${methodName}(params, timeout_ms=timeout_ms, stdin_bytes=stdin_bytes)`);
+        }
+        lines.push('');
+      }
       continue;
     }
 
-    const propertyName = camelCase(key);
+    const propertyName = snakeCase(key);
+    const camelAlias = camelCase(key);
     const nestedClassName = classNameFor([...pathParts, key], asyncMode);
     lines.push('    @property');
     lines.push(`    def ${propertyName}(self):`);
     lines.push(`        return ${nestedClassName}(self._runtime)`);
     lines.push('');
+
+    if (camelAlias !== propertyName) {
+      lines.push('    @property');
+      lines.push(`    def ${camelAlias}(self):`);
+      lines.push(`        return self.${propertyName}`);
+      lines.push('');
+    }
   }
 
   return lines.join('\n').trimEnd();
