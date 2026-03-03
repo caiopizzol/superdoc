@@ -185,7 +185,7 @@ describe('document-api story: inline formatting', () => {
     const result = unwrap<any>(
       await client.doc.format.paragraph.setAlignment({ sessionId: sid, target, alignment: 'center' }),
     );
-    expect(result.receipt?.success).toBe(true);
+    expect(result.success).toBe(true);
     await saveResult(sid, 'align-center.docx');
   });
 
@@ -196,7 +196,7 @@ describe('document-api story: inline formatting', () => {
     const result = unwrap<any>(
       await client.doc.format.paragraph.setAlignment({ sessionId: sid, target, alignment: 'right' }),
     );
-    expect(result.receipt?.success).toBe(true);
+    expect(result.success).toBe(true);
     await saveResult(sid, 'align-right.docx');
   });
 
@@ -210,7 +210,7 @@ describe('document-api story: inline formatting', () => {
     const result = unwrap<any>(
       await client.doc.format.paragraph.setAlignment({ sessionId: sid, target, alignment: 'justify' }),
     );
-    expect(result.receipt?.success).toBe(true);
+    expect(result.success).toBe(true);
     await saveResult(sid, 'align-justify.docx');
   });
 
