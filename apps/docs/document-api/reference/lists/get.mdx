@@ -29,6 +29,9 @@ Returns a ListItemInfo object with the item kind, level, marker, and address.
 | Field | Type | Required | Description |
 | --- | --- | --- | --- |
 | `address` | ListItemAddress | yes | ListItemAddress |
+| `address.kind` | `"block"` | yes | Constant: `"block"` |
+| `address.nodeId` | string | yes |  |
+| `address.nodeType` | `"listItem"` | yes | Constant: `"listItem"` |
 
 ### Example request
 
@@ -47,6 +50,9 @@ Returns a ListItemInfo object with the item kind, level, marker, and address.
 | Field | Type | Required | Description |
 | --- | --- | --- | --- |
 | `address` | ListItemAddress | yes | ListItemAddress |
+| `address.kind` | `"block"` | yes | Constant: `"block"` |
+| `address.nodeId` | string | yes |  |
+| `address.nodeType` | `"listItem"` | yes | Constant: `"listItem"` |
 | `kind` | enum | no | `"ordered"`, `"bullet"` |
 | `level` | integer | no |  |
 | `marker` | string | no |  |

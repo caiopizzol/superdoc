@@ -359,7 +359,7 @@ export const OPERATION_DEFINITIONS = {
   'styles.apply': {
     memberPath: 'styles.apply',
     description:
-      'Apply document-level default style changes to the stylesheet (word/styles.xml). Targets docDefaults run properties with boolean patch semantics.',
+      'Apply document-level default style changes to the stylesheet (word/styles.xml). Targets docDefaults run and paragraph channels with set-style patch semantics.',
     expectedResult: 'Returns a StylesApplyReceipt with per-channel success/failure details for each property change.',
     requiresDocumentContext: true,
     metadata: mutationOperation({
