@@ -129,39 +129,40 @@ const { createSuperDocClient } = require('@superdoc-dev/sdk');
 
 
     async def main():
-        client = AsyncSuperDocClient(default_change_mode="tracked")
+        async with AsyncSuperDocClient(default_change_mode="tracked") as client:
+            # Open a document
+            await client.doc.open({"doc": "./contract.docx"})
 
-        # Open a document
-        await client.doc.open({"doc": "./contract.docx"})
-
-        # Find and replace text with query + mutation plan
-        match = await client.doc.query.match(
-            {
-                "select": {"type": "text", "pattern": "ACME Corp"},
-                "require": "first",
-            }
-        )
-
-        ref = match.get("items", [{}])[0].get("handle", {}).get("ref")
-        if ref:
-            await client.doc.mutations.apply(
+            # Find and replace text with query + mutation plan
+            match = await client.doc.query.match(
                 {
-                    "expectedRevision": match["evaluatedRevision"],
-                    "atomic": True,
-                    "steps": [
-                        {
-                            "id": "replace-acme",
-                            "op": "text.rewrite",
-                            "where": {"by": "ref", "ref": ref},
-                            "args": {"replacement": {"text": "NewCo Inc."}},
-                        }
-                    ],
+                    "select": {"type": "text", "pattern": "ACME Corp"},
+                    "require": "first",
                 }
             )
 
-        # Save and close
-        await client.doc.save({"inPlace": True})
-        await client.doc.close({})
+            items = match.get("items") or []
+            first_item = items[0] if items else {}
+            ref = first_item.get("handle", {}).get("ref")
+            if ref:
+                await client.doc.mutations.apply(
+                    {
+                        "expectedRevision": match["evaluatedRevision"],
+                        "atomic": True,
+                        "steps": [
+                            {
+                                "id": "replace-acme",
+                                "op": "text.rewrite",
+                                "where": {"by": "ref", "ref": ref},
+                                "args": {"replacement": {"text": "NewCo Inc."}},
+                            }
+                        ],
+                    }
+                )
+
+            # Save and close
+            await client.doc.save({"inPlace": True})
+            await client.doc.close({})
 
 
     asyncio.run(main())
@@ -170,6 +171,7 @@ const { createSuperDocClient } = require('@superdoc-dev/sdk');
 </Tabs>
 
 Set `defaultChangeMode: 'tracked'` (Node) or `default_change_mode='tracked'` (Python) to make mutations use tracked changes by default. If you pass `changeMode` on a specific call, that explicit value overrides the default.
+The Python SDK also exposes synchronous `SuperDocClient` with the same `doc.*` operations when you prefer non-async code paths.
 
 ## User identity
 
@@ -216,7 +218,8 @@ Both SDKs can connect to a running Yjs collaboration session. Pass `collabUrl` (
       content: 'Added by the SDK',
     });
 
-    await client.doc.save();
+    // Optional: write a local snapshot
+    await client.doc.save({ out: './my-doc-room.docx', force: true });
     await client.doc.close();
     await client.dispose();
     ```
@@ -242,7 +245,8 @@ Both SDKs can connect to a running Yjs collaboration session. Pass `collabUrl` (
                 "content": "Added by the SDK",
             })
 
-            await client.doc.save({"inPlace": True})
+            # Optional: write a local snapshot
+            await client.doc.save({"out": "./my-doc-room.docx", "force": True})
             await client.doc.close({})
 
 
@@ -251,7 +255,7 @@ Both SDKs can connect to a running Yjs collaboration session. Pass `collabUrl` (
   </Tab>
 </Tabs>
 
-No `doc` path is needed — the document state comes from the collaboration session. If you pass a `doc` path, it is used to seed the room when empty. When the room already has content, the local file is ignored.
+No `doc` path is needed — the document state comes from the collaboration session. If you pass a `doc` path, it is used to seed the room when empty. When the room already has content, the local file is ignored. If you want a local `.docx` from a collab-only session, pass `out` to `doc.save`.
 
 See [SDK + Collaboration Sessions](/document-engine/sdk-collaboration-sessions) for more detail on how SDK sessions and collaboration sessions interact.
 

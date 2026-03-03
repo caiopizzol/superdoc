@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import os
 from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
 
@@ -8,7 +9,6 @@ from fastapi import FastAPI, Query
 from fastapi.responses import FileResponse
 from superdoc import SuperDocClient
 
-REPO_ROOT = Path(__file__).resolve().parents[3]
 EXAMPLE_ROOT = Path(__file__).resolve().parent
 
 # Hardcoded demo config.
@@ -19,16 +19,9 @@ DOWNLOAD_PATH = EXAMPLE_ROOT / ".superdoc-state" / "download.docx"
 COLLAB_PROVIDER = "y-websocket"
 COLLAB_URL = "ws://127.0.0.1:8081/v1/collaboration"
 COLLAB_DOCUMENT_ID = "superdoc-dev-room"
+COLLAB_TOKEN_ENV = "YHUB_AUTH_TOKEN"
+COLLAB_TOKEN_DEFAULT = "YOUR_PRIVATE_TOKEN"
 COLLAB_SYNC_TIMEOUT_MS = 60_000
-
-# Hardcode local CLI + state to keep behavior deterministic for this repo example.
-# Using .ts means the SDK will execute via bun.
-CLI_BIN = REPO_ROOT / "apps" / "cli" / "src" / "index.ts"
-CLI_STATE_DIR = EXAMPLE_ROOT / ".superdoc-state"
-CLIENT_ENV = {
-    "SUPERDOC_CLI_BIN": str(CLI_BIN),
-    "SUPERDOC_CLI_STATE_DIR": str(CLI_STATE_DIR),
-}
 
 # Keep open timeout above sync timeout, and watchdog above open timeout.
 OPEN_TIMEOUT_MS = 90_000
@@ -46,11 +39,10 @@ except PackageNotFoundError:
 @app.on_event("startup")
 def on_startup() -> None:
     logger.info("superdoc-sdk version: %s", SUPERDOC_SDK_VERSION)
+    os.environ.setdefault(COLLAB_TOKEN_ENV, COLLAB_TOKEN_DEFAULT)
+    logger.info("collaboration token env: %s", COLLAB_TOKEN_ENV)
 
-    client = SuperDocClient(
-        env=CLIENT_ENV,
-        watchdog_timeout_ms=WATCHDOG_TIMEOUT_MS,
-    )
+    client = SuperDocClient(watchdog_timeout_ms=WATCHDOG_TIMEOUT_MS)
 
     open_result = client.doc.open(
         {
@@ -59,6 +51,7 @@ def on_startup() -> None:
                 "providerType": COLLAB_PROVIDER,
                 "url": COLLAB_URL,
                 "documentId": COLLAB_DOCUMENT_ID,
+                "tokenEnv": COLLAB_TOKEN_ENV,
                 "syncTimeoutMs": COLLAB_SYNC_TIMEOUT_MS,
             },
         },
@@ -87,6 +80,7 @@ def root() -> dict:
             "providerType": COLLAB_PROVIDER,
             "url": COLLAB_URL,
             "documentId": COLLAB_DOCUMENT_ID,
+            "tokenEnv": COLLAB_TOKEN_ENV,
         },
     }
 

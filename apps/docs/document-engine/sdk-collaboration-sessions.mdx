@@ -45,7 +45,8 @@ Pass `collabUrl` and `collabDocumentId` to `doc.open`. No file path is required 
       content: 'Inserted by the Node SDK',
     });
 
-    await client.doc.save();
+    // Optional: write a local snapshot
+    await client.doc.save({ out: './my-doc-room.docx', force: true });
     await client.doc.close();
     await client.dispose();
     ```
@@ -73,7 +74,8 @@ Pass `collabUrl` and `collabDocumentId` to `doc.open`. No file path is required 
                 "content": "Inserted by the Python SDK",
             })
 
-            await client.doc.save({"inPlace": True})
+            # Optional: write a local snapshot
+            await client.doc.save({"out": "./my-doc-room.docx", "force": True})
             await client.doc.close({})
 
 
@@ -167,10 +169,10 @@ You can open multiple SDK sessions against different collaboration rooms:
     });
 
     // Switch between sessions
-    await client.doc.session.setDefault({ id: 'session-a' });
+    await client.doc.session.setDefault({ sessionId: 'session-a' });
     await client.doc.info();
 
-    await client.doc.session.setDefault({ id: 'session-b' });
+    await client.doc.session.setDefault({ sessionId: 'session-b' });
     await client.doc.info();
     ```
   </Tab>
@@ -189,10 +191,10 @@ You can open multiple SDK sessions against different collaboration rooms:
     })
 
     # Switch between sessions
-    await client.doc.session.setDefault({"id": "session-a"})
+    await client.doc.session.setDefault({"sessionId": "session-a"})
     await client.doc.info({})
 
-    await client.doc.session.setDefault({"id": "session-b"})
+    await client.doc.session.setDefault({"sessionId": "session-b"})
     await client.doc.info({})
     ```
   </Tab>
