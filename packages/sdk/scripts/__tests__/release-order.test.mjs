@@ -80,6 +80,10 @@ test('sdk semantic-release prepareCmd builds Node SDK before validate', async ()
 test('sdk semantic-release main branch uses alpha prerelease on latest channel', async () => {
   const content = await readRepoFile('packages/sdk/.releaserc.cjs');
   assert.ok(
+    content.includes("{ name: 'stable', channel: 'latest' }"),
+    "packages/sdk/.releaserc.cjs: stable release branch must remain configured",
+  );
+  assert.ok(
     content.includes("{ name: 'main', prerelease: 'alpha', channel: 'latest' }"),
     "packages/sdk/.releaserc.cjs: main branch must release alpha versions on latest",
   );
